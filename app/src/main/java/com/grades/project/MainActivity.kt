@@ -1,8 +1,10 @@
 package com.grades.project
 
+import android.animation.Animator
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
@@ -10,7 +12,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.updateLayoutParams
 import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkManager
-import com.grades.project.dialog.MyDialog
+import com.grades.project.worker.MyWorkRequestFactory
+import com.grades.project.worker.SyncWithServerWorker
 
 class MainActivity : AppCompatActivity() {
 
@@ -21,42 +24,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        val coinView: View = findViewById(R.id.coin_view)
 
-        MyDialog(this).show()
+        val coinFlipAnimator: ValueAnimator = createCoinFlipAnimator(coinView)
+        val coinSizeAnimator: ValueAnimator = createCoinSizeAnimator(coinView)
+        val coinAnimatorSet: Animator = createCoinAnimatorSet(coinFlipAnimator, coinSizeAnimator)
 
-        val image: View = findViewById(R.id.coin_view)
+        val coinAlphaAnimator: ObjectAnimator = createCoinAlphaAnimator(coinView)
 
-        val coinFlipAnimator = ValueAnimator().apply {
-            setFloatValues(0F, 360F * 5)
-            duration = 4000L
-            interpolator = AccelerateDecelerateInterpolator()
-            addUpdateListener { animator ->
-                image.rotationX = animator.animatedValue as Float
-            }
-        }
-        val coinSizeAnimator = ValueAnimator().apply {
-            duration = 4000L
-            interpolator = AccelerateDecelerateInterpolator()
-            addUpdateListener { animator ->
-                image.updateLayoutParams {
-                    width = animator.animatedValue as Int
-                    height = animator.animatedValue as Int
-                }
-            }
-        }
-        val coinAnimatorSet = AnimatorSet().apply {
-            play(coinFlipAnimator).with(coinSizeAnimator)
-        }
-
-
-        val coinAlphaAnimator = ObjectAnimator.ofFloat(image, View.ALPHA, 1F, 0.0F).apply {
-            duration = 700
-            interpolator = AccelerateDecelerateInterpolator()
-            repeatCount = 10
-            repeatMode = ValueAnimator.REVERSE
-        }
-
-        image.setOnClickListener {
+        coinView.setOnClickListener {
             // Аниимация через ValueAnimator и AnimatorSet
             if (!coinAnimatorSet.isRunning) {
                 val width: Int = it.measuredWidth
@@ -65,25 +41,58 @@ class MainActivity : AppCompatActivity() {
             }
 
             // Аниимация через ObjectAnimator
-//            if (!coinAlphaAnimator.isRunning) {
-//                coinAlphaAnimator.start()
-//            }
+            // if (!coinAlphaAnimator.isRunning) {
+            // coinAlphaAnimator.start()
+            // }
 
             // Анимация через ViewPropertyAnimator
-            image.animate().apply {
-                alpha(0F)
-                interpolator = AccelerateDecelerateInterpolator()
-                duration = 5000
+            // coinView.animate().apply {
+            // alpha(0F)
+            // interpolator = AccelerateDecelerateInterpolator()
+            // duration = 5000
+            // }
+        }
+    }
+
+    private fun createCoinFlipAnimator(coinView: View): ValueAnimator {
+        return ValueAnimator().apply {
+            setFloatValues(0F, 360F * 5)
+            duration = 4000L
+            interpolator = AccelerateDecelerateInterpolator()
+            addUpdateListener { animator ->
+                coinView.rotationX = animator.animatedValue as Float
             }
         }
     }
 
-    private fun createWork() {
-        WorkManager.getInstance(this)
-            .enqueueUniqueWork(
-                SyncWithServerWorker.NAME,
-                ExistingWorkPolicy.REPLACE,
-                MyWorkRequestFactory.create("some data"),
-            )
+    private fun createCoinSizeAnimator(coinView: View): ValueAnimator {
+        return ValueAnimator().apply {
+            duration = 4000L
+            interpolator = AccelerateDecelerateInterpolator()
+            addUpdateListener { animator ->
+                coinView.updateLayoutParams {
+                    width = animator.animatedValue as Int
+                    height = animator.animatedValue as Int
+                }
+            }
+        }
+    }
+
+    private fun createCoinAnimatorSet(
+        coinFlipAnimator: Animator,
+        coinSizeAnimator: Animator,
+    ): AnimatorSet {
+        return AnimatorSet().apply {
+            play(coinFlipAnimator).with(coinSizeAnimator)
+        }
+    }
+
+    private fun createCoinAlphaAnimator(coinView: View): ObjectAnimator {
+        return ObjectAnimator.ofFloat(coinView, View.ALPHA, 1F, 0.0F).apply {
+            duration = 700
+            interpolator = AccelerateDecelerateInterpolator()
+            repeatCount = 10
+            repeatMode = ValueAnimator.REVERSE
+        }
     }
 }

@@ -18,7 +18,7 @@
         android:textStyle="bold"
         android:textColor="@color/black"
         android:gravity="center_horizontal"
-        android:text="Заголовок кстомного диалога"
+        android:text="Хедер кстомного диалога"
         />
 
     <LinearLayout
@@ -67,7 +67,7 @@
         android:textStyle="bold"
         android:textColor="@color/black"
         android:gravity="center_horizontal"
-        android:text="Заголовок кстомного диалога"
+        android:text="Футер кстомного диалога"
         />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
